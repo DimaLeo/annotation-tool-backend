@@ -8,6 +8,6 @@ public class AnnotationToolAppApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(AnnotationToolAppApplication.class, args);
+		System.out.println("test");
 	}
-
 }
