@@ -5,13 +5,13 @@ import java.math.BigInteger;
 public class FetchPostsRequest {
 
     private String collectionName;
-    private BigInteger lastFetchedPost;
+    private Integer batchNumber;
 
     public String getCollectionName() {
         return collectionName;
     }
 
-    public BigInteger getLastFetchedPost() {
-        return lastFetchedPost;
+    public Integer getBatchNumber() {
+        return batchNumber;
     }
 }

@@ -3,6 +3,7 @@ package com.certh.annotationtoolapp.model.post;
 import com.mongodb.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -74,6 +75,7 @@ public class Post {
     @Field("relevance_score")
     @Nullable
     private Double relevanceScore;
+    @Field("")
 
     public String getId() {
         return id;

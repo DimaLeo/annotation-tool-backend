@@ -21,9 +21,9 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PostMapping("/fetch")
-    public ResponseEntity<List<Post>> getPostsPaginated(@RequestBody FetchPostsRequest filters){
-        List<Post> posts = postService.getPostsPaginated(filters.getCollectionName(), filters.getLastFetchedPost());
+    @PostMapping("/annotation-batch")
+    public ResponseEntity<List<Post>> getAnnotationPostsBatch(@RequestBody FetchPostsRequest filters){
+        List<Post> posts = postService.getPostsBatch(filters.getCollectionName(), filters.getBatchNumber());
 
         return new ResponseEntity<List<Post>>(posts, HttpStatus.OK);
     }
