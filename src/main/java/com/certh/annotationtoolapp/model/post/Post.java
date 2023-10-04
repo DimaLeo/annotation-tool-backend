@@ -4,6 +4,7 @@ import com.mongodb.lang.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -75,7 +76,11 @@ public class Post {
     @Field("relevance_score")
     @Nullable
     private Double relevanceScore;
-    @Field("")
+    @Field("annotation_progress")
+    @Nullable
+    @Getter
+    @Setter
+    private String annotationProgress;
 
     public String getId() {
         return id;

@@ -31,7 +31,7 @@ public class PostService {
             Query query = new Query(Criteria.where("_id").is(post.get_id()));
 
             Update update = new Update().set(fieldName, fieldValue);
-            mongoTemplate.updateFirst(query, update, Post.class);
+            mongoTemplate.updateFirst(query, update, Post.class, collectionName);
             resultList.add(mongoTemplate.findOne(query, Post.class, collectionName));
         }
 
@@ -49,11 +49,12 @@ public class PostService {
         Criteria quoteCriteria = Criteria.where("is_quote").ne(1);
         Criteria retweetCriteria = Criteria.where("is_retweet").ne(1);
         Criteria replyCriteria = Criteria.where("is_reply").ne(1);
-
+        Criteria inProgressCriteria = Criteria.where("annotation_progress").ne("completed").orOperator(Criteria.where("annotation_progress").isNull());
 
         query.addCriteria(quoteCriteria);
         query.addCriteria(retweetCriteria);
         query.addCriteria(replyCriteria);
+        query.addCriteria(inProgressCriteria);
 
         if(batchNumber > 1){
             query.skip((long) batchSize * (batchNumber-1));
@@ -63,6 +64,8 @@ public class PostService {
         List<Post> posts;
         posts = mongoTemplate.find(query, Post.class, collectionName);
 
-        return posts;
+        List<Post> updatedPostList = updatePostsWithNewField(posts, "annotation_progress", "in_progress", collectionName);
+
+        return updatedPostList;
     }
 }
