@@ -40,7 +40,7 @@ public class PostService {
     }
 
     public List<Post> getPostsBatch(String collectionName, Integer batchNumber){
-        int batchSize = 20;
+        int batchSize = 5;
 
         Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
 

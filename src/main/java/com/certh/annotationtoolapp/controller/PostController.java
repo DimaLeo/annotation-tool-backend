@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/posts")
 public class PostController {
 
@@ -38,6 +39,10 @@ public class PostController {
 
             responseList.add(new FetchResponse(post.getId(), post.getText(), post.getPlatform(),post.getMediaUrl(), locationNames, post.getTimestamp()));
         }
+        for(FetchResponse item: responseList){
+            System.out.println(item.getId());
+        }
+
 
         return new ResponseEntity<>(responseList, HttpStatus.OK);
     }
