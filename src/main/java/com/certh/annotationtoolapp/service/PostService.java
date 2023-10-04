@@ -40,7 +40,7 @@ public class PostService {
     }
 
     public List<Post> getPostsBatch(String collectionName, Integer batchNumber){
-        int batchSize = 5;
+        int batchSize = 20;
 
         Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
 
@@ -49,17 +49,20 @@ public class PostService {
         Criteria quoteCriteria = Criteria.where("is_quote").ne(1);
         Criteria retweetCriteria = Criteria.where("is_retweet").ne(1);
         Criteria replyCriteria = Criteria.where("is_reply").ne(1);
-        Criteria inProgressCriteria = Criteria.where("annotation_progress").ne("completed").orOperator(Criteria.where("annotation_progress").isNull());
+        Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
+        Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
+        Criteria orInProgressCriteria = new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria);
 
-        query.addCriteria(quoteCriteria);
-        query.addCriteria(retweetCriteria);
-        query.addCriteria(replyCriteria);
-        query.addCriteria(inProgressCriteria);
+        Criteria andCriteria = new Criteria().andOperator(quoteCriteria, retweetCriteria, replyCriteria, orInProgressCriteria);
+
+        query.addCriteria(andCriteria);
+
 
         if(batchNumber > 1){
             query.skip((long) batchSize * (batchNumber-1));
         }
 
+        System.out.println(query);
 
         List<Post> posts;
         posts = mongoTemplate.find(query, Post.class, collectionName);

@@ -86,7 +86,7 @@ public class Post {
         return id;
     }
 
-    public ArrayList<ExtractedLocationItem> getExtracted_locations() {
+    public ArrayList<ExtractedLocationItem> getExtractedLocations() {
         return extractedLocations;
     }
 
