@@ -9,6 +9,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +19,24 @@ import java.util.List;
 @Service
 public class PostService {
     private final MongoTemplate mongoTemplate;
+    private static final Logger logger = LoggerFactory.getLogger(PostService.class);
 
 
 
     public PostService(MongoTemplate mongoTemplate) {
         this.mongoTemplate = mongoTemplate;
+    }
+
+    public void updatePostField(String id, String fieldName, String fieldValue, String collectionName){
+
+        logger.info("Creating query to update post "+id);
+        Query query = new Query(Criteria.where("id").is(id));
+
+        Update update = new Update().set(fieldName, fieldValue);
+
+        logger.info("Updating post "+id+" with field: "+fieldName+" and value: "+fieldValue);
+        mongoTemplate.updateFirst(query, update, Post.class, collectionName);
+
     }
 
     public List<Post> updatePostsWithNewField(List<Post> posts, String fieldName, String fieldValue, String collectionName){
@@ -70,5 +86,18 @@ public class PostService {
         List<Post> updatedPostList = updatePostsWithNewField(posts, "annotation_progress", "in_progress", collectionName);
 
         return updatedPostList;
+    }
+
+    public void resetProgressField(String collectionName){
+        Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
+        Query query = new Query().with(sort);
+
+        Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("in_progress");
+        query.addCriteria(inProgressValueCriteria);
+
+        Update update = new Update().set("annotation_progress", "aborted");
+
+
+        mongoTemplate.updateMulti(query, update, Post.class, collectionName);
     }
 }

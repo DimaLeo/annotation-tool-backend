@@ -20,7 +20,10 @@ public class Post {
 
     @Id
     private BigInteger _id;
+
     @Field("id")
+    @Getter
+    @Setter
     private String id;
     @Field("extracted_locations")
     private ArrayList<ExtractedLocationItem> extractedLocations;
@@ -81,10 +84,6 @@ public class Post {
     @Getter
     @Setter
     private String annotationProgress;
-
-    public String getId() {
-        return id;
-    }
 
     public ArrayList<ExtractedLocationItem> getExtractedLocations() {
         return extractedLocations;
