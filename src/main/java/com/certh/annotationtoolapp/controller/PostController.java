@@ -52,8 +52,19 @@ public class PostController {
     @PostMapping("/annotate-post")
     public ResponseEntity<AnnotatePostResponse> annotatePost(@RequestBody AnnotatePostRequest requestBody){
 
-        postService.updatePostField(requestBody.getId(), "relevant", requestBody.getRelevance(), requestBody.getCollectionName());
-        postService.updatePostField(requestBody.getId(), "annotation_progress", "completed", requestBody.getCollectionName());
+        if(requestBody.getRelevanceInput().equals("skipped")){
+            postService.updatePostStringField(requestBody.getId(), "annotation_progress", "completed", requestBody.getCollectionName());
+        }
+        else{
+
+            boolean annotatedAs;
+
+            annotatedAs = requestBody.getRelevanceInput().equals("relevant");
+
+            postService.updatePostBooleanField(requestBody.getId(), "relevant", annotatedAs, requestBody.getCollectionName());
+            postService.updatePostStringField(requestBody.getId(), "annotation_progress", "completed", requestBody.getCollectionName());
+
+        }
 
         AnnotatePostResponse responseBody = new AnnotatePostResponse("Success", "Annotation of post successful");
 
@@ -62,7 +73,7 @@ public class PostController {
 
 
     @GetMapping("/reset-in-progress/{collectionName}")
-    public ResponseEntity<String> getAnnotationPostsBatch(@PathVariable String collectionName){
+    public ResponseEntity<String> resetInProgressPosts(@PathVariable String collectionName){
         postService.resetProgressField(collectionName);
         return new ResponseEntity<>("Success", HttpStatus.OK);
     }

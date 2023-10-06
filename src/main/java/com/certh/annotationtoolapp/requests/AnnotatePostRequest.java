@@ -11,5 +11,5 @@ public class AnnotatePostRequest {
     private String id;
 
     @Getter
-    private String relevance;
+    private String relevanceInput;
 }

@@ -27,16 +27,22 @@ public class PostService {
         this.mongoTemplate = mongoTemplate;
     }
 
-    public void updatePostField(String id, String fieldName, String fieldValue, String collectionName){
-
-        logger.info("Creating query to update post "+id);
+    public void updatePostField(String id, String fieldName, Object fieldValue, String collectionName) {
+        logger.info("Creating query to update post " + id);
         Query query = new Query(Criteria.where("id").is(id));
 
         Update update = new Update().set(fieldName, fieldValue);
 
-        logger.info("Updating post "+id+" with field: "+fieldName+" and value: "+fieldValue);
+        logger.info("Updating post " + id + " with field: " + fieldName + " and value: " + fieldValue);
         mongoTemplate.updateFirst(query, update, Post.class, collectionName);
+    }
 
+    public void updatePostStringField(String id, String fieldName, String fieldValue, String collectionName) {
+        updatePostField(id, fieldName, fieldValue, collectionName);
+    }
+
+    public void updatePostBooleanField(String id, String fieldName, boolean fieldValue, String collectionName) {
+        updatePostField(id, fieldName, fieldValue, collectionName);
     }
 
     public List<Post> updatePostsWithNewField(List<Post> posts, String fieldName, String fieldValue, String collectionName){
@@ -56,7 +62,7 @@ public class PostService {
     }
 
     public List<Post> getPostsBatch(String collectionName, Integer batchNumber){
-        int batchSize = 5;
+        int batchSize = 25;
 
         Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
 
