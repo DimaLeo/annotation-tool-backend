@@ -62,15 +62,15 @@ public class PostService {
     }
 
     public List<Post> getPostsBatch(String collectionName, Integer batchNumber){
-        int batchSize = 25;
+        int batchSize = 5;
 
         Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
 
         Query query = new Query().with(sort).limit(batchSize);
 
-        Criteria quoteCriteria = Criteria.where("is_quote").ne(1);
-        Criteria retweetCriteria = Criteria.where("is_retweet").ne(1);
-        Criteria replyCriteria = Criteria.where("is_reply").ne(1);
+        Criteria quoteCriteria = Criteria.where("is_quote").ne(true);
+        Criteria retweetCriteria = Criteria.where("is_retweet").ne(true);
+        Criteria replyCriteria = Criteria.where("is_reply").ne(true);
         Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
         Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
         Criteria orInProgressCriteria = new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria);

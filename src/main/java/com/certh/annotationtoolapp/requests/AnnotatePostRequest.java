@@ -3,13 +3,11 @@ package com.certh.annotationtoolapp.requests;
 import lombok.Getter;
 import org.springframework.format.annotation.DateTimeFormat;
 
+@Getter
 public class AnnotatePostRequest {
-    @Getter
     private String collectionName;
 
-    @Getter
     private String id;
 
-    @Getter
     private String relevanceInput;
 }
