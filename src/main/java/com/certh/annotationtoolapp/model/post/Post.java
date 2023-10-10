@@ -15,6 +15,8 @@ import java.util.ArrayList;
 
 @Document
 @AllArgsConstructor
+@Getter
+@Setter
 @Data
 public class Post {
 
@@ -78,74 +80,5 @@ public class Post {
     private Double relevanceScore;
     @Field("annotation_progress")
     @Nullable
-    @Getter
-    @Setter
     private String annotationProgress;
-
-    public String getId() {
-        return id;
-    }
-
-    public ArrayList<ExtractedLocationItem> getExtracted_locations() {
-        return extractedLocations;
-    }
-
-    public boolean isIs_quote() {
-        return isQuote;
-    }
-
-    public boolean isIs_retweet() {
-        return isRetweet;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public SearchCriteriaItem getMatched_keywords() {
-        return matchedKeywords;
-    }
-
-    public String getMedia_type() {
-        return mediaType;
-    }
-
-    public ArrayList<String> getMedia_url() {
-        return mediaUrl;
-    }
-
-    public String getPlatform() {
-        return platform;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    @Nullable
-    public String getSentiment() {
-        return sentiment;
-    }
-
-    @Nullable
-    public Double getRelevanceScore() {
-        return relevanceScore;
-    }
-
-    public void setRelevanceScore(@Nullable Double relevanceScore) {
-        this.relevanceScore = relevanceScore;
-    }
-
-
-    @Nullable
-    public Boolean getRelevant() {
-        return isRelevant;
-    }
-
-    public void setRelevant(@Nullable Boolean relevant) {
-        isRelevant = relevant;
-    }}
+}
