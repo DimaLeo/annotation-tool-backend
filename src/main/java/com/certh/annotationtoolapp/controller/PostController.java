@@ -5,6 +5,8 @@ import com.certh.annotationtoolapp.model.post.GeometryItem;
 import com.certh.annotationtoolapp.model.post.Post;
 import com.certh.annotationtoolapp.requests.AnnotatePostRequest;
 import com.certh.annotationtoolapp.requests.FetchPostsRequest;
+import com.certh.annotationtoolapp.requests.GeneralResponse;
+import com.certh.annotationtoolapp.requests.ResetProgressRequest;
 import com.certh.annotationtoolapp.responses.AnnotatePostResponse;
 import com.certh.annotationtoolapp.responses.FetchResponse;
 import com.certh.annotationtoolapp.service.PostService;
@@ -30,7 +32,8 @@ public class PostController {
 
     @PostMapping("/annotation-batch")
     public ResponseEntity<List<FetchResponse>> getAnnotationPostsBatch(@RequestBody FetchPostsRequest filters){
-        List<Post> posts = postService.getPostsBatch(filters.getCollectionName(), filters.getBatchNumber());
+
+        List<Post> posts = postService.getPostsBatch(filters.getCollectionName(), filters.getLanguage(), filters.getFromDate(), filters.getToDate(), filters.getHasImage(), filters.getBatchNumber());
         List<FetchResponse> responseList = new ArrayList<>();
 
         for(Post post: posts){
@@ -41,10 +44,6 @@ public class PostController {
 
             responseList.add(new FetchResponse(post.getId(), post.getText(), post.getPlatform(),post.getMediaUrl(), locationNames, post.getTimestamp()));
         }
-        for(FetchResponse item: responseList){
-            System.out.println(item.getId());
-        }
-
 
         return new ResponseEntity<>(responseList, HttpStatus.OK);
     }
@@ -68,13 +67,26 @@ public class PostController {
 
         AnnotatePostResponse responseBody = new AnnotatePostResponse("Success", "Annotation of post successful");
 
-        return new ResponseEntity<AnnotatePostResponse>(responseBody, HttpStatus.OK);
+        return new ResponseEntity<>(responseBody, HttpStatus.OK);
     }
 
 
     @GetMapping("/reset-in-progress/{collectionName}")
-    public ResponseEntity<String> resetInProgressPosts(@PathVariable String collectionName){
-        postService.resetProgressField(collectionName);
+    public ResponseEntity<String> resetInProgressPostsManual(@PathVariable String collectionName){
+        postService.resetProgressFieldManual(collectionName);
         return new ResponseEntity<>("Success", HttpStatus.OK);
+    }
+
+    @PostMapping("/abort-progress")
+    public ResponseEntity<GeneralResponse> resetInProgressPosts(@RequestBody ResetProgressRequest requestBody){
+        try{
+            postService.resetProgressField(requestBody.getCollectionName(), requestBody.getPostIdList());
+            return new ResponseEntity<>(new GeneralResponse("Success", "Successfully reverted posts"), HttpStatus.OK);
+        }
+        catch (Exception ex){
+            System.out.println(ex.getMessage());
+            return new ResponseEntity<>(new GeneralResponse("Error", ex.getMessage()), HttpStatus.NOT_MODIFIED);
+        }
+
     }
 }
