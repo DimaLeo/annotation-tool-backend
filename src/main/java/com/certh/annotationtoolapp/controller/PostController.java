@@ -1,7 +1,6 @@
 package com.certh.annotationtoolapp.controller;
 
 import com.certh.annotationtoolapp.model.post.ExtractedLocationItem;
-import com.certh.annotationtoolapp.model.post.GeometryItem;
 import com.certh.annotationtoolapp.model.post.Post;
 import com.certh.annotationtoolapp.requests.AnnotatePostRequest;
 import com.certh.annotationtoolapp.requests.FetchPostsRequest;
@@ -10,12 +9,9 @@ import com.certh.annotationtoolapp.requests.ResetProgressRequest;
 import com.certh.annotationtoolapp.responses.AnnotatePostResponse;
 import com.certh.annotationtoolapp.responses.FetchResponse;
 import com.certh.annotationtoolapp.service.PostService;
-import com.mongodb.lang.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -60,7 +56,7 @@ public class PostController {
 
             annotatedAs = requestBody.getRelevanceInput().equals("relevant");
 
-            postService.updatePostBooleanField(requestBody.getId(), "relevant", annotatedAs, requestBody.getCollectionName());
+            postService.updatePostBooleanField(requestBody.getId(), "annotated_as", annotatedAs, requestBody.getCollectionName());
             postService.updatePostStringField(requestBody.getId(), "annotation_progress", "completed", requestBody.getCollectionName());
 
         }
