@@ -7,6 +7,7 @@ import com.certh.annotationtoolapp.requests.AnnotatePostRequest;
 import com.certh.annotationtoolapp.requests.FetchPostsRequest;
 import com.certh.annotationtoolapp.responses.AnnotatePostResponse;
 import com.certh.annotationtoolapp.responses.FetchResponse;
+import com.certh.annotationtoolapp.responses.FetchListViewResponse;
 import com.certh.annotationtoolapp.service.PostService;
 import com.mongodb.lang.Nullable;
 import org.springframework.http.HttpStatus;
@@ -69,6 +70,42 @@ public class PostController {
         AnnotatePostResponse responseBody = new AnnotatePostResponse("Success", "Annotation of post successful");
 
         return new ResponseEntity<AnnotatePostResponse>(responseBody, HttpStatus.OK);
+    }
+
+    @PostMapping("/listview-batch")
+    public ResponseEntity<List<FetchListViewResponse>> getListViewPostsBatch(@RequestBody FetchPostsRequest filters){
+        List<Post> posts = postService.getPostsBatch(filters.getCollectionName(), filters.getBatchNumber());
+        List<FetchListViewResponse> responseList = new ArrayList<>();
+
+        for (Post post : posts) {
+            List<FetchListViewResponse.LocationItem> locationItemList = new ArrayList<>();
+            for (ExtractedLocationItem item : post.getExtractedLocations()) {
+                ArrayList<Float> coords = item.getGeometry().getCoordinates();
+                double longitude = coords.get(0);
+                double latitude = coords.get(1);
+
+                FetchListViewResponse.LocationItem.Geometry geometry = 
+                    new FetchListViewResponse.LocationItem.Geometry(longitude, latitude);
+                locationItemList.add(new FetchListViewResponse.LocationItem(item.getPlacename(), geometry));
+            }
+
+            String relevance = post.getRelevant() != null && post.getRelevant() ? "relevant" : "irrelevant";
+
+            FetchListViewResponse response = new FetchListViewResponse(
+                post.get_id(),
+                post.getId(),
+                post.getText(),
+                post.getPlatform(),
+                post.getMediaUrl(),
+                locationItemList,
+                relevance, 
+                post.getTimestamp()
+            );
+
+            responseList.add(response);
+        }
+
+        return new ResponseEntity<>(responseList, HttpStatus.OK);
     }
 
 

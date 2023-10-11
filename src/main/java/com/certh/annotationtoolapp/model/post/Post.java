@@ -19,6 +19,7 @@ import java.util.ArrayList;
 public class Post {
 
     @Id
+    @Getter
     private BigInteger _id;
 
     @Field("id")
