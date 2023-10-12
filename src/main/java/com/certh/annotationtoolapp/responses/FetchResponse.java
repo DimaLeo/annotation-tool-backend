@@ -6,18 +6,13 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.math.BigInteger;
 import java.util.List;
 
+@Getter
 public class FetchResponse {
-    @Getter
     private String id;
-    @Getter
     private String text;
-    @Getter
     private String platform;
-    @Getter
     private List<String> mediaUrl;
-    @Getter
     private List<String> locations;
-    @Getter
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private String timestamp;
 
