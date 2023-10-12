@@ -62,6 +62,39 @@ public class PostService {
 
     }
 
+    public List<Post> getPostsBatchTest(String collectionName, Integer batchNumber){
+        int batchSize = 25;
+
+        Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
+
+        Query query = new Query().with(sort).limit(batchSize);
+
+        Criteria quoteCriteria = Criteria.where("is_quote").ne(1);
+        Criteria retweetCriteria = Criteria.where("is_retweet").ne(1);
+        Criteria replyCriteria = Criteria.where("is_reply").ne(1);
+        Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
+        Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
+        Criteria orInProgressCriteria = new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria);
+
+        Criteria andCriteria = new Criteria().andOperator(quoteCriteria, retweetCriteria, replyCriteria, orInProgressCriteria);
+
+        query.addCriteria(andCriteria);
+
+
+        if(batchNumber > 1){
+            query.skip((long) batchSize * (batchNumber-1));
+        }
+
+        System.out.println(query);
+
+        List<Post> posts;
+        posts = mongoTemplate.find(query, Post.class, collectionName);
+
+        List<Post> updatedPostList = updatePostsWithNewField(posts, "annotation_progress", "in_progress", collectionName);
+
+        return updatedPostList;
+    }
+
     public List<Post> getPostsBatch(String collectionName,String selectedLanguage, String fromDate, String toDate, Boolean hasImage, Integer batchNumber){
 
         logger.info("Executing getPostBatch");

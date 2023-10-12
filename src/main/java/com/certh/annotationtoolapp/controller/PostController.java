@@ -69,7 +69,7 @@ public class PostController {
 
     @PostMapping("/listview-batch")
     public ResponseEntity<List<FetchListViewResponse>> getListViewPostsBatch(@RequestBody FetchPostsRequest filters){
-        List<Post> posts = postService.getPostsBatch(filters.getCollectionName(), filters.getBatchNumber());
+        List<Post> posts = postService.getPostsBatchTest(filters.getCollectionName(), filters.getBatchNumber());
         List<FetchListViewResponse> responseList = new ArrayList<>();
 
         for (Post post : posts) {
@@ -84,7 +84,7 @@ public class PostController {
                 locationItemList.add(new FetchListViewResponse.LocationItem(item.getPlacename(), geometry));
             }
 
-            String relevance = post.getRelevant() != null && post.getRelevant() ? "relevant" : "irrelevant";
+            String relevance = post.getAnnotatedAs()!= null && post.getAnnotatedAs() ? "relevant" : "irrelevant";
 
             FetchListViewResponse response = new FetchListViewResponse(
                 post.get_id(),

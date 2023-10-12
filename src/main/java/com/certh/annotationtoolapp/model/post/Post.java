@@ -73,9 +73,9 @@ public class Post {
     @Field("sentiment")
     @Nullable
     private String sentiment;
-    @Field("is_relevant")
+    @Field("annotated_as")
     @Nullable
-    private Boolean isRelevant;
+    private Boolean annotatedAs;
     @Field("relevance_score")
     @Nullable
     private Double relevanceScore;
