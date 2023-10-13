@@ -72,11 +72,7 @@ public class PostService {
         Criteria quoteCriteria = Criteria.where("is_quote").ne(1);
         Criteria retweetCriteria = Criteria.where("is_retweet").ne(1);
         Criteria replyCriteria = Criteria.where("is_reply").ne(1);
-        Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
-        Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
-        Criteria orInProgressCriteria = new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria);
-
-        Criteria andCriteria = new Criteria().andOperator(quoteCriteria, retweetCriteria, replyCriteria, orInProgressCriteria);
+        Criteria andCriteria = new Criteria().andOperator(quoteCriteria, retweetCriteria, replyCriteria);
 
         query.addCriteria(andCriteria);
 
@@ -90,9 +86,7 @@ public class PostService {
         List<Post> posts;
         posts = mongoTemplate.find(query, Post.class, collectionName);
 
-        List<Post> updatedPostList = updatePostsWithNewField(posts, "annotation_progress", "in_progress", collectionName);
-
-        return updatedPostList;
+        return posts;
     }
 
     public List<Post> getPostsBatch(String collectionName,String selectedLanguage, String fromDate, String toDate, Boolean hasImage, Integer batchNumber){
