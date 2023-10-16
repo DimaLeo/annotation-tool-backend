@@ -15,16 +15,15 @@ import java.util.ArrayList;
 
 @Document
 @AllArgsConstructor
+@Getter
+@Setter
 @Data
 public class Post {
 
     @Id
     @Getter
     private BigInteger _id;
-
     @Field("id")
-    @Getter
-    @Setter
     private String id;
     @Field("extracted_locations")
     private ArrayList<ExtractedLocationItem> extractedLocations;
@@ -74,78 +73,13 @@ public class Post {
     @Field("sentiment")
     @Nullable
     private String sentiment;
-    @Field("is_relevant")
+    @Field("annotated_as")
     @Nullable
-    private Boolean isRelevant;
+    private Boolean annotatedAs;
     @Field("relevance_score")
     @Nullable
     private Double relevanceScore;
     @Field("annotation_progress")
     @Nullable
-    @Getter
-    @Setter
     private String annotationProgress;
-
-    public ArrayList<ExtractedLocationItem> getExtractedLocations() {
-        return extractedLocations;
-    }
-
-    public boolean isIs_quote() {
-        return isQuote;
-    }
-
-    public boolean isIs_retweet() {
-        return isRetweet;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public SearchCriteriaItem getMatched_keywords() {
-        return matchedKeywords;
-    }
-
-    public String getMedia_type() {
-        return mediaType;
-    }
-
-    public ArrayList<String> getMedia_url() {
-        return mediaUrl;
-    }
-
-    public String getPlatform() {
-        return platform;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public String getTimestamp() {
-        return timestamp;
-    }
-
-    @Nullable
-    public String getSentiment() {
-        return sentiment;
-    }
-
-    @Nullable
-    public Double getRelevanceScore() {
-        return relevanceScore;
-    }
-
-    public void setRelevanceScore(@Nullable Double relevanceScore) {
-        this.relevanceScore = relevanceScore;
-    }
-
-
-    @Nullable
-    public Boolean getRelevant() {
-        return isRelevant;
-    }
-
-    public void setRelevant(@Nullable Boolean relevant) {
-        isRelevant = relevant;
-    }}
+}
