@@ -1,7 +1,7 @@
 package com.certh.annotationtoolapp.service;
 
+import com.certh.annotationtoolapp.model.filters.Filters;
 import com.certh.annotationtoolapp.model.post.Post;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,97 +61,81 @@ public class PostService {
 
     }
 
-    public List<Post> getPostsBatchTest(String collectionName, Integer batchNumber){
-        int batchSize = 25;
+    public List<Post> getListViewBatch(Filters filters){
 
-        Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
+        Integer batchSize = 50;
 
-        Query query = new Query().with(sort).limit(batchSize);
-
-        Criteria quoteCriteria = Criteria.where("is_quote").ne(1);
-        Criteria retweetCriteria = Criteria.where("is_retweet").ne(1);
-        Criteria replyCriteria = Criteria.where("is_reply").ne(1);
-        Criteria andCriteria = new Criteria().andOperator(quoteCriteria, retweetCriteria, replyCriteria);
-
-        query.addCriteria(andCriteria);
-
-
-        if(batchNumber > 1){
-            query.skip((long) batchSize * (batchNumber-1));
-        }
-
-        System.out.println(query);
-
-        List<Post> posts;
-        posts = mongoTemplate.find(query, Post.class, collectionName);
+        List<Post> posts = getPostsBatch(filters, "listView", batchSize);
 
         return posts;
     }
 
-    public List<Post> getPostsBatch(String collectionName,String selectedLanguage, String fromDate, String toDate, Boolean hasImage, Integer batchNumber){
+    public List<Post> getAnnotationBatch(Filters filters){
 
-        logger.info("Executing getPostBatch");
+        Integer batchSize = 15;
 
-        int batchSize = 5;
+        List<Post> posts = getPostsBatch(filters, "annotation", batchSize);
 
-        Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
+        List<Post> updatedPostList = updatePostsWithNewField(posts, "annotation_progress", "in_progress", filters.getCollectionName());
 
-        Query query = new Query().with(sort).limit(batchSize);
-
-        logger.info("Setting static criteria");
-        // Static criteria - predefined
-        Criteria quoteCriteria = Criteria.where("is_quote").ne(true);
-        Criteria retweetCriteria = Criteria.where("is_retweet").ne(true);
-        Criteria replyCriteria = Criteria.where("is_reply").ne(true);
-        Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
-        Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
-        Criteria orInProgressCriteria = new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria);
-        logger.info("Setting filter criteria");
-        // Filter criteria - defined by ui request
-        Criteria mediaUrlCriteria = hasImage? Criteria.where("media_type").is("image"):null;
-        Criteria languageCriteria = Criteria.where("language").is(selectedLanguage);
-        Criteria fromDateCriteria = Criteria.where("timestamp").gte(fromDate);
-        Criteria toDateCriteria = Criteria.where("timestamp").lte(toDate);
+        return updatedPostList;
+    }
+    public List<Post> getPostsBatch(Filters filters, String source, Integer batchSize){
 
 
-        Criteria andCriteria;
+        Query query = generateQuery(filters, source, batchSize);
 
-        if(hasImage){
-            andCriteria = new Criteria().andOperator(
-                    quoteCriteria,
-                    retweetCriteria,
-                    replyCriteria,
-                    orInProgressCriteria,
-                    mediaUrlCriteria,
-                    languageCriteria,
-                    fromDateCriteria,
-                    toDateCriteria);
-        }else{
-            andCriteria = new Criteria().andOperator(
-                    quoteCriteria,
-                    retweetCriteria,
-                    replyCriteria,
-                    orInProgressCriteria,
-                    languageCriteria,
-                    fromDateCriteria,
-                    toDateCriteria);
-        }
-
-        query.addCriteria(andCriteria);
-
-
-        if(batchNumber > 1){
-            query.skip((long) batchSize * (batchNumber-1));
+        if(filters.getBatchNumber() > 1){
+            query.skip((long) batchSize * (filters.getBatchNumber()-1));
         }
 
         List<Post> posts;
         logger.info("Retrieving data from db");
-        posts = mongoTemplate.find(query, Post.class, collectionName);
+        posts = mongoTemplate.find(query, Post.class, filters.getCollectionName());
 
-        List<Post> updatedPostList = updatePostsWithNewField(posts, "annotation_progress", "in_progress", collectionName);
-
-        return updatedPostList;
+        return posts;
     }
+
+    public Query generateQuery(Filters filters, String source, Integer batchSize){
+
+        logger.info("generating query for "+source);
+
+        Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
+        Query query = new Query().with(sort).limit(batchSize);
+
+
+        ArrayList<Criteria> criteriaList = new ArrayList<>();
+        logger.info("Setting static criteria");
+        criteriaList.add(Criteria.where("is_quote").ne(true));
+        criteriaList.add(Criteria.where("is_retweet").ne(true));
+        criteriaList.add(Criteria.where("is_reply").ne(true));
+
+        if(source.equals("annotation")){
+            logger.info("setting static criteria for annotation view");
+            Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
+            Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
+            criteriaList.add(new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria));
+        }
+
+        logger.info("Setting filter criteria");
+        if(filters.getHasImage() != null && filters.getHasImage()){
+            criteriaList.add(Criteria.where("media_type").is("image"));
+        }
+        criteriaList.add(Criteria.where("language").is(filters.getLanguage()));
+        criteriaList.add(Criteria.where("timestamp").gte(filters.getFromDate()));
+        criteriaList.add(Criteria.where("timestamp").lte(filters.getToDate()));
+
+        Criteria andCriteria = new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
+
+        query.addCriteria(andCriteria);
+        logger.info(query.toString());
+
+        return query;
+
+    }
+
+
+
 
     public void resetProgressFieldManual(String collectionName){
         Query query = new Query();

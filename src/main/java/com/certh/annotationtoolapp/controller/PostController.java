@@ -1,9 +1,9 @@
 package com.certh.annotationtoolapp.controller;
 
+import com.certh.annotationtoolapp.model.filters.Filters;
 import com.certh.annotationtoolapp.model.post.ExtractedLocationItem;
 import com.certh.annotationtoolapp.model.post.Post;
 import com.certh.annotationtoolapp.requests.AnnotatePostRequest;
-import com.certh.annotationtoolapp.requests.FetchPostsRequest;
 import com.certh.annotationtoolapp.requests.GeneralResponse;
 import com.certh.annotationtoolapp.requests.ResetProgressRequest;
 import com.certh.annotationtoolapp.responses.AnnotatePostResponse;
@@ -28,9 +28,9 @@ public class PostController {
     }
 
     @PostMapping("/annotation-batch")
-    public ResponseEntity<List<FetchResponse>> getAnnotationPostsBatch(@RequestBody FetchPostsRequest filters){
+    public ResponseEntity<List<FetchResponse>> getAnnotationPostsBatch(@RequestBody Filters filters){
 
-        List<Post> posts = postService.getPostsBatch(filters.getCollectionName(), filters.getLanguage(), filters.getFromDate(), filters.getToDate(), filters.getHasImage(), filters.getBatchNumber());
+        List<Post> posts = postService.getAnnotationBatch(filters);
         List<FetchResponse> responseList = new ArrayList<>();
 
         for(Post post: posts){
@@ -68,8 +68,8 @@ public class PostController {
     }
 
     @PostMapping("/listview-batch")
-    public ResponseEntity<List<FetchListViewResponse>> getListViewPostsBatch(@RequestBody FetchPostsRequest filters){
-        List<Post> posts = postService.getPostsBatchTest(filters.getCollectionName(), filters.getBatchNumber());
+    public ResponseEntity<List<FetchListViewResponse>> getListViewPostsBatch(@RequestBody Filters filters){
+        List<Post> posts = postService.getListViewBatch(filters);
         List<FetchListViewResponse> responseList = new ArrayList<>();
 
         for (Post post : posts) {
