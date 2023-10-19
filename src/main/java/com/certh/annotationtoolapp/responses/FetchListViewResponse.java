@@ -3,36 +3,26 @@ package com.certh.annotationtoolapp.responses;
 import lombok.Getter;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.math.BigInteger;
 import java.util.List;
 
+@Getter
 public class FetchListViewResponse {
-    @Getter
-    private BigInteger mongoId;
-    @Getter
     private String id;
-    @Getter
     private String text;
-    @Getter
     private String platform;
-    @Getter
     private List<String> mediaUrl;
-    @Getter
-    private List<LocationItem> locations;
-    @Getter
-    private String relevance;
-    @Getter
+    private List<String> locations;
+    private String annotated_as;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private String timestamp;
 
-    public FetchListViewResponse(BigInteger mongoId, String id, String text, String platform, List<String> mediaUrl, List<LocationItem> locations, String relevance, String timestamp) {
-        this.mongoId = mongoId;
+    public FetchListViewResponse(String id, String text, String platform, List<String> mediaUrl, List<String> locations, String annotated_as, String timestamp) {
         this.id = id;
         this.text = text;
         this.platform = platform;
         this.mediaUrl = mediaUrl;
         this.locations = locations;
-        this.relevance = relevance;
+        this.annotated_as = annotated_as;
         this.timestamp = timestamp;
     }
 
@@ -47,7 +37,7 @@ public class FetchListViewResponse {
             this.name = name;
             this.geometry = geometry;
         }
-        
+
         public static class Geometry {
             @Getter
             private double longitude;

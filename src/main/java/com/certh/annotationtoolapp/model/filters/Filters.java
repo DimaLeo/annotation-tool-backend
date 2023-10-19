@@ -13,9 +13,8 @@ public class Filters {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private String toDate;
     private Boolean hasImage;
-    @Nullable
-    private Boolean isAnnotated;
-    @Nullable
-    private Boolean isSkipped;
     private Integer batchNumber;
+    @Nullable
+    private String postStatus;
+
 }
