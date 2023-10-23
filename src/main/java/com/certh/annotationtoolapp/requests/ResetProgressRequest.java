@@ -9,5 +9,6 @@ public class ResetProgressRequest {
 
     private String collectionName;
     private List<String> postIdList;
+    private String reason;
 
 }

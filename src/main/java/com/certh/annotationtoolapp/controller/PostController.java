@@ -49,7 +49,7 @@ public class PostController {
     public ResponseEntity<AnnotatePostResponse> annotatePost(@RequestBody AnnotatePostRequest requestBody){
 
         if(requestBody.getRelevanceInput().equals("skipped")){
-            postService.updatePostStringField(requestBody.getId(), "annotation_progress", "completed", requestBody.getCollectionName());
+            postService.updatePostStringField(requestBody.getId(), "annotation_progress", "skipped", requestBody.getCollectionName());
         }
         else{
 
@@ -72,32 +72,22 @@ public class PostController {
         List<Post> posts = postService.getListViewBatch(filters);
         List<FetchListViewResponse> responseList = new ArrayList<>();
 
-        for (Post post : posts) {
-            List<FetchListViewResponse.LocationItem> locationItemList = new ArrayList<>();
-            for (ExtractedLocationItem item : post.getExtractedLocations()) {
-                ArrayList<Float> coords = item.getGeometry().getCoordinates();
-                double longitude = coords.get(0);
-                double latitude = coords.get(1);
-
-                FetchListViewResponse.LocationItem.Geometry geometry = 
-                    new FetchListViewResponse.LocationItem.Geometry(longitude, latitude);
-                locationItemList.add(new FetchListViewResponse.LocationItem(item.getPlacename(), geometry));
+        for(Post post: posts){
+            List<String> locationNames = new ArrayList<>();
+            for(ExtractedLocationItem item: post.getExtractedLocations()){
+                locationNames.add(item.getPlacename());
             }
 
-            String relevance = post.getAnnotatedAs()!= null && post.getAnnotatedAs() ? "relevant" : "irrelevant";
+            String annotated_as;
 
-            FetchListViewResponse response = new FetchListViewResponse(
-                post.get_id(),
-                post.getId(),
-                post.getText(),
-                post.getPlatform(),
-                post.getMediaUrl(),
-                locationItemList,
-                relevance, 
-                post.getTimestamp()
-            );
+            if(post.getAnnotatedAs() == null){
+                annotated_as = "notAnnotated";
+            }
+            else {
+                annotated_as = post.getAnnotatedAs()? "relevant" : "irrelevant";
+            }
 
-            responseList.add(response);
+            responseList.add(new FetchListViewResponse(post.getId(), post.getText(), post.getPlatform(),post.getMediaUrl(), locationNames, annotated_as, post.getTimestamp()));
         }
 
         return new ResponseEntity<>(responseList, HttpStatus.OK);
@@ -113,7 +103,7 @@ public class PostController {
     @PostMapping("/abort-progress")
     public ResponseEntity<GeneralResponse> resetInProgressPosts(@RequestBody ResetProgressRequest requestBody){
         try{
-            postService.resetProgressField(requestBody.getCollectionName(), requestBody.getPostIdList());
+            postService.resetProgressField(requestBody.getCollectionName(), requestBody.getPostIdList(), requestBody.getReason());
             return new ResponseEntity<>(new GeneralResponse("Success", "Successfully reverted posts"), HttpStatus.OK);
         }
         catch (Exception ex){
