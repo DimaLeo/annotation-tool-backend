@@ -21,6 +21,7 @@ import java.util.ArrayList;
 public class Post {
 
     @Id
+    @Getter
     private BigInteger _id;
     @Field("id")
     private String id;
@@ -72,9 +73,9 @@ public class Post {
     @Field("sentiment")
     @Nullable
     private String sentiment;
-    @Field("is_relevant")
+    @Field("annotated_as")
     @Nullable
-    private Boolean isRelevant;
+    private Boolean annotatedAs;
     @Field("relevance_score")
     @Nullable
     private Double relevanceScore;

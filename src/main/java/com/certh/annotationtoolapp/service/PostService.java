@@ -1,7 +1,9 @@
 package com.certh.annotationtoolapp.service;
 
+import com.certh.annotationtoolapp.model.filters.Filters;
 import com.certh.annotationtoolapp.model.post.Post;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -9,18 +11,14 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PostService {
-    private final MongoTemplate mongoTemplate;
     private static final Logger logger = LoggerFactory.getLogger(PostService.class);
-
+    private final MongoTemplate mongoTemplate;
 
 
     public PostService(MongoTemplate mongoTemplate) {
@@ -45,12 +43,12 @@ public class PostService {
         updatePostField(id, fieldName, fieldValue, collectionName);
     }
 
-    public List<Post> updatePostsWithNewField(List<Post> posts, String fieldName, String fieldValue, String collectionName){
+    public List<Post> updatePostsWithNewField(List<Post> posts, String fieldName, String fieldValue, String collectionName) {
         logger.info("preparing progress update criteria");
         List<Post> resultList = new ArrayList<>();
 
         logger.info("Updating data in db");
-        for(Post post: posts){
+        for (Post post : posts) {
             Query query = new Query(Criteria.where("_id").is(post.get_id()));
 
             Update update = new Update().set(fieldName, fieldValue);
@@ -62,96 +60,125 @@ public class PostService {
 
     }
 
-    public List<Post> getPostsBatch(String collectionName,String selectedLanguage, String fromDate, String toDate, Boolean hasImage, Integer batchNumber){
+    public List<Post> getListViewBatch(Filters filters) {
 
-        logger.info("Executing getPostBatch");
+        Integer batchSize = 50;
 
-        int batchSize = 5;
+        List<Post> posts = getPostsBatch(filters, "listView", batchSize);
+        logger.info("Retrieved post batch");
 
-        Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
+        return posts;
+    }
 
-        Query query = new Query().with(sort).limit(batchSize);
+    public List<Post> getAnnotationBatch(Filters filters) {
 
-        logger.info("Setting static criteria");
-        // Static criteria - predefined
-        Criteria quoteCriteria = Criteria.where("is_quote").ne(true);
-        Criteria retweetCriteria = Criteria.where("is_retweet").ne(true);
-        Criteria replyCriteria = Criteria.where("is_reply").ne(true);
-        Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
-        Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
-        Criteria orInProgressCriteria = new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria);
-        logger.info("Setting filter criteria");
-        // Filter criteria - defined by ui request
-        Criteria mediaUrlCriteria = hasImage? Criteria.where("media_type").is("image"):null;
-        Criteria languageCriteria = Criteria.where("language").is(selectedLanguage);
-        Criteria fromDateCriteria = Criteria.where("timestamp").gte(fromDate);
-        Criteria toDateCriteria = Criteria.where("timestamp").lte(toDate);
+        Integer batchSize = 15;
 
+        List<Post> posts = getPostsBatch(filters, "annotation", batchSize);
 
-        Criteria andCriteria;
+        logger.info("Retrieved post batch");
+        logger.info("Updating posts with annotation progress");
 
-        if(hasImage){
-            andCriteria = new Criteria().andOperator(
-                    quoteCriteria,
-                    retweetCriteria,
-                    replyCriteria,
-                    orInProgressCriteria,
-                    mediaUrlCriteria,
-                    languageCriteria,
-                    fromDateCriteria,
-                    toDateCriteria);
-        }else{
-            andCriteria = new Criteria().andOperator(
-                    quoteCriteria,
-                    retweetCriteria,
-                    replyCriteria,
-                    orInProgressCriteria,
-                    languageCriteria,
-                    fromDateCriteria,
-                    toDateCriteria);
-        }
+        return updatePostsWithNewField(posts, "annotation_progress", "in_progress", filters.getCollectionName());
+    }
 
-        query.addCriteria(andCriteria);
+    public List<Post> getPostsBatch(Filters filters, String source, Integer batchSize) {
 
 
-        if(batchNumber > 1){
-            query.skip((long) batchSize * (batchNumber-1));
+        Query query = generateQuery(filters, source, batchSize);
+
+        if (filters.getBatchNumber() > 1) {
+            query.skip((long) batchSize * (filters.getBatchNumber() - 1));
         }
 
         List<Post> posts;
         logger.info("Retrieving data from db");
-        posts = mongoTemplate.find(query, Post.class, collectionName);
+        posts = mongoTemplate.find(query, Post.class, filters.getCollectionName());
 
-        List<Post> updatedPostList = updatePostsWithNewField(posts, "annotation_progress", "in_progress", collectionName);
-
-        return updatedPostList;
+        return posts;
     }
 
-    public void resetProgressFieldManual(String collectionName){
+    public Query generateQuery(Filters filters, String source, Integer batchSize) {
+
+        logger.info("!!!!!!!!!!!!!!!!!!!!"+filters.getPostStatus());
+
+        logger.info("generating query for " + source);
+
+        Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
+        Query query = new Query().with(sort).limit(batchSize);
+
+
+        ArrayList<Criteria> criteriaList = new ArrayList<>();
+        logger.info("Setting static criteria");
+        criteriaList.add(Criteria.where("is_quote").ne(true));
+        criteriaList.add(Criteria.where("is_retweet").ne(true));
+        criteriaList.add(Criteria.where("is_reply").ne(true));
+
+        if (source.equals("annotation")) {
+            logger.info("setting static criteria for annotation view");
+            Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
+            Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
+            criteriaList.add(new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria));
+        }
+
+        if (source.equals("listView")) {
+
+            switch (Objects.requireNonNull(filters.getPostStatus())) {
+                case "skipped" -> criteriaList.add(Criteria.where("annotation_progress").is("skipped"));
+                case "annotated" -> criteriaList.add(Criteria.where("annotated_as").ne(null));
+            }
+
+
+        }
+
+        logger.info("Setting filter criteria");
+        if (filters.getHasImage() != null && filters.getHasImage()) {
+            criteriaList.add(Criteria.where("media_type").is("image"));
+        }
+        criteriaList.add(Criteria.where("language").is(filters.getLanguage()));
+        criteriaList.add(Criteria.where("timestamp").gte(filters.getFromDate()));
+        criteriaList.add(Criteria.where("timestamp").lte(filters.getToDate()));
+
+        Criteria andCriteria = new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
+
+        query.addCriteria(andCriteria);
+        logger.info(query.toString());
+
+        return query;
+
+    }
+
+
+    public void resetProgressFieldManual(String collectionName) {
         Query query = new Query();
 
         Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("in_progress");
         Criteria completedCriteria = Criteria.where("annotation_progress").is("completed");
+        Criteria skippedCriteria = Criteria.where("annotation_progress").is("skipped");
+
         Criteria orCriteria = new Criteria().orOperator(
                 inProgressValueCriteria,
-                completedCriteria);
+                completedCriteria,
+                skippedCriteria);
 
         query.addCriteria(orCriteria);
 
         Update update = new Update().set("annotation_progress", "aborted");
+        Update update2 = new Update().set("annotated_as", null);
 
 
         mongoTemplate.updateMulti(query, update, Post.class, collectionName);
+        mongoTemplate.updateMulti(query, update2, Post.class, collectionName);
     }
 
-    public void resetProgressField(String collectionName, List<String> postIdList){
+    public void resetProgressField(String collectionName, List<String> postIdList, String status) {
 
         logger.info("Executing resetProgressField");
 
         Query query = new Query();
         ArrayList<Criteria> orCriteria = new ArrayList<>();
 
-        for(String id: postIdList){
+        for (String id : postIdList) {
             orCriteria.add(Criteria.where("id").is(id));
         }
 
@@ -160,10 +187,10 @@ public class PostService {
         query.addCriteria(finalCriteria);
 
         logger.info("Aborting annotation progress of post ids:");
-        for(String id: postIdList){
+        for (String id : postIdList) {
             logger.info(id);
         }
-        logger.info("due to filter change");
+        logger.info("due to "+ status);
         Update update = new Update().set("annotation_progress", "aborted");
 
 

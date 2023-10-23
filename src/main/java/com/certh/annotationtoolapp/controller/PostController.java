@@ -1,13 +1,14 @@
 package com.certh.annotationtoolapp.controller;
 
+import com.certh.annotationtoolapp.model.filters.Filters;
 import com.certh.annotationtoolapp.model.post.ExtractedLocationItem;
 import com.certh.annotationtoolapp.model.post.Post;
 import com.certh.annotationtoolapp.requests.AnnotatePostRequest;
-import com.certh.annotationtoolapp.requests.FetchPostsRequest;
 import com.certh.annotationtoolapp.requests.GeneralResponse;
 import com.certh.annotationtoolapp.requests.ResetProgressRequest;
 import com.certh.annotationtoolapp.responses.AnnotatePostResponse;
 import com.certh.annotationtoolapp.responses.FetchResponse;
+import com.certh.annotationtoolapp.responses.FetchListViewResponse;
 import com.certh.annotationtoolapp.service.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,9 +28,9 @@ public class PostController {
     }
 
     @PostMapping("/annotation-batch")
-    public ResponseEntity<List<FetchResponse>> getAnnotationPostsBatch(@RequestBody FetchPostsRequest filters){
+    public ResponseEntity<List<FetchResponse>> getAnnotationPostsBatch(@RequestBody Filters filters){
 
-        List<Post> posts = postService.getPostsBatch(filters.getCollectionName(), filters.getLanguage(), filters.getFromDate(), filters.getToDate(), filters.getHasImage(), filters.getBatchNumber());
+        List<Post> posts = postService.getAnnotationBatch(filters);
         List<FetchResponse> responseList = new ArrayList<>();
 
         for(Post post: posts){
@@ -48,7 +49,7 @@ public class PostController {
     public ResponseEntity<AnnotatePostResponse> annotatePost(@RequestBody AnnotatePostRequest requestBody){
 
         if(requestBody.getRelevanceInput().equals("skipped")){
-            postService.updatePostStringField(requestBody.getId(), "annotation_progress", "completed", requestBody.getCollectionName());
+            postService.updatePostStringField(requestBody.getId(), "annotation_progress", "skipped", requestBody.getCollectionName());
         }
         else{
 
@@ -66,6 +67,32 @@ public class PostController {
         return new ResponseEntity<>(responseBody, HttpStatus.OK);
     }
 
+    @PostMapping("/listview-batch")
+    public ResponseEntity<List<FetchListViewResponse>> getListViewPostsBatch(@RequestBody Filters filters){
+        List<Post> posts = postService.getListViewBatch(filters);
+        List<FetchListViewResponse> responseList = new ArrayList<>();
+
+        for(Post post: posts){
+            List<String> locationNames = new ArrayList<>();
+            for(ExtractedLocationItem item: post.getExtractedLocations()){
+                locationNames.add(item.getPlacename());
+            }
+
+            String annotated_as;
+
+            if(post.getAnnotatedAs() == null){
+                annotated_as = "notAnnotated";
+            }
+            else {
+                annotated_as = post.getAnnotatedAs()? "relevant" : "irrelevant";
+            }
+
+            responseList.add(new FetchListViewResponse(post.getId(), post.getText(), post.getPlatform(),post.getMediaUrl(), locationNames, annotated_as, post.getTimestamp()));
+        }
+
+        return new ResponseEntity<>(responseList, HttpStatus.OK);
+    }
+
 
     @GetMapping("/reset-in-progress/{collectionName}")
     public ResponseEntity<String> resetInProgressPostsManual(@PathVariable String collectionName){
@@ -76,7 +103,7 @@ public class PostController {
     @PostMapping("/abort-progress")
     public ResponseEntity<GeneralResponse> resetInProgressPosts(@RequestBody ResetProgressRequest requestBody){
         try{
-            postService.resetProgressField(requestBody.getCollectionName(), requestBody.getPostIdList());
+            postService.resetProgressField(requestBody.getCollectionName(), requestBody.getPostIdList(), requestBody.getReason());
             return new ResponseEntity<>(new GeneralResponse("Success", "Successfully reverted posts"), HttpStatus.OK);
         }
         catch (Exception ex){
