@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class AnnotatePostResponse {
+public class GeneralResponse {
 
     private String status;
 
