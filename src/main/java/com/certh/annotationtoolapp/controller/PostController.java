@@ -4,9 +4,8 @@ import com.certh.annotationtoolapp.model.filters.Filters;
 import com.certh.annotationtoolapp.model.post.ExtractedLocationItem;
 import com.certh.annotationtoolapp.model.post.Post;
 import com.certh.annotationtoolapp.requests.AnnotatePostRequest;
-import com.certh.annotationtoolapp.requests.GeneralResponse;
 import com.certh.annotationtoolapp.requests.ResetProgressRequest;
-import com.certh.annotationtoolapp.responses.AnnotatePostResponse;
+import com.certh.annotationtoolapp.responses.GeneralResponse;
 import com.certh.annotationtoolapp.responses.FetchResponse;
 import com.certh.annotationtoolapp.responses.FetchListViewResponse;
 import com.certh.annotationtoolapp.service.PostService;
@@ -46,7 +45,7 @@ public class PostController {
     }
 
     @PostMapping("/annotate-post")
-    public ResponseEntity<AnnotatePostResponse> annotatePost(@RequestBody AnnotatePostRequest requestBody){
+    public ResponseEntity<GeneralResponse> annotatePost(@RequestBody AnnotatePostRequest requestBody){
 
         if(requestBody.getRelevanceInput().equals("skipped")){
             postService.updatePostStringField(requestBody.getId(), "annotation_progress", "skipped", requestBody.getCollectionName());
@@ -62,7 +61,7 @@ public class PostController {
 
         }
 
-        AnnotatePostResponse responseBody = new AnnotatePostResponse("Success", "Annotation of post successful");
+        GeneralResponse responseBody = new GeneralResponse("Success", "Annotation of post successful");
 
         return new ResponseEntity<>(responseBody, HttpStatus.OK);
     }
