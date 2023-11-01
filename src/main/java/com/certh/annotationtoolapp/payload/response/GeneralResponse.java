@@ -1,4 +1,4 @@
-package com.certh.annotationtoolapp.responses;
+package com.certh.annotationtoolapp.payload.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,9 +1,8 @@
-package com.certh.annotationtoolapp.responses;
+package com.certh.annotationtoolapp.payload.response;
 
 import lombok.Getter;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.math.BigInteger;
 import java.util.List;
 
 @Getter
