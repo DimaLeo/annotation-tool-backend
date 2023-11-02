@@ -1,10 +1,12 @@
 package com.certh.annotationtoolapp.security.jwt;
 
 import java.security.Key;
-import java.util.Date;
+import java.time.ZonedDateTime;
+import java.util.*;
 
 import com.certh.annotationtoolapp.security.services.UserDetailsImpl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,25 +18,38 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
+@Slf4j
 @Component
 public class JwtUtils {
-    private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
+    public static final String TOKEN_TYPE = "JWT";
+    public static final String TOKEN_ISSUER = "annotation-tool-api";
+    public static final String TOKEN_AUDIENCE = "annotation-tool-ui";
 
-    @Value("${jwtSecretValue}")
+    @Value("${jwt.secret.value}")
     private String jwtSecret;
 
-    @Value("${tokenExpirationMillis}")
-    private int jwtExpirationMs;
+    @Value("${token.expiration.minutes}")
+    private int jwtExpirationMinutes;
 
     public String generateJwtToken(Authentication authentication) {
 
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
+        List<String> roles = new ArrayList<>();
+        roles.add("User");
+
+        byte[] signingKey = jwtSecret.getBytes();
+
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername()))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
-                .signWith(key(), SignatureAlgorithm.HS256)
+                .setHeaderParam("typ", TOKEN_TYPE)
+                .signWith(Keys.hmacShaKeyFor(signingKey), SignatureAlgorithm.HS256)
+                .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(jwtExpirationMinutes).toInstant()))
+                .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
+                .setId(UUID.randomUUID().toString())
+                .setIssuer(TOKEN_ISSUER)
+                .setAudience(TOKEN_AUDIENCE)
+                .setSubject(userPrincipal.getUsername())
+                .claim("roles", roles)
                 .compact();
     }
 
@@ -47,20 +62,27 @@ public class JwtUtils {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-    public boolean validateJwtToken(String authToken) {
+    public Optional<Jws<Claims>> validateJwtToken(String authToken) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parse(authToken);
-            return true;
+
+            byte[] signingKey = jwtSecret.getBytes();
+
+            Jws<Claims> jws = Jwts.parserBuilder()
+                    .setSigningKey(signingKey)
+                    .build()
+                    .parseClaimsJws(authToken);
+
+            return Optional.of(jws);
         } catch (MalformedJwtException e) {
-            logger.error("Invalid JWT token: {}", e.getMessage());
+            log.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            logger.error("JWT token is expired: {}", e.getMessage());
+            log.error("JWT token is expired: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            logger.error("JWT token is unsupported: {}", e.getMessage());
+            log.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            logger.error("JWT claims string is empty: {}", e.getMessage());
+            log.error("JWT claims string is empty: {}", e.getMessage());
         }
 
-        return false;
+        return Optional.empty();
     }
 }

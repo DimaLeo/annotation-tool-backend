@@ -2,18 +2,16 @@ package com.certh.annotationtoolapp.service;
 
 import com.certh.annotationtoolapp.model.user.User;
 import com.certh.annotationtoolapp.payload.response.GeneralResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class UserService {
-
-    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     private final MongoTemplate mongoTemplate;
     BCryptPasswordEncoder encoder;
 
@@ -42,29 +40,29 @@ public class UserService {
 
         }
         catch (Exception e){
-            logger.error("Error: "+e.getMessage());
+            log.error("Error: "+e.getMessage());
             return new GeneralResponse("error","Failed to create user. "+ e.getMessage());
         }
     }
 
     public GeneralResponse authenticateUser(String username, String password){
         try{
-            logger.info("Trying to authenticate user "+username);
+            log.info("Trying to authenticate user "+username);
             User user = findUserByUsername(username);
 
             if(encoder.matches(password, user.getPassword())){
-                logger.info("success");
+                log.info("success");
                 return new GeneralResponse("success","User successfully authenticated");
             }
             else {
-                logger.info("failed");
+                log.info("failed");
                 return new GeneralResponse("unauthorized","Wrong password provided");
 
             }
 
         }
         catch (Exception e){
-            logger.error("Error: "+e.getMessage());
+            log.error("Error: "+e.getMessage());
             return new GeneralResponse("error","Authentication failed"+ e.getMessage());
         }
     }
