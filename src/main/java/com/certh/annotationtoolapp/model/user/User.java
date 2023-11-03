@@ -21,6 +21,12 @@ import java.util.List;
 @Document(collection = "Users")
 public class User{
 
+    public User(String username, String password, String refreshToken) {
+        this.username = username;
+        this.password = password;
+        this.refreshToken = refreshToken;
+    }
+
     public User(String username, String password) {
         this.username = username;
         this.password = password;
@@ -37,4 +43,7 @@ public class User{
     @NotBlank
     @Field("password")
     private String password;
+
+    @Field("refresh_token")
+    private String refreshToken;
 }

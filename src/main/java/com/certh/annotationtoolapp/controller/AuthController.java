@@ -1,5 +1,6 @@
 package com.certh.annotationtoolapp.controller;
 
+import com.certh.annotationtoolapp.model.user.User;
 import com.certh.annotationtoolapp.payload.request.AuthRequest;
 import com.certh.annotationtoolapp.payload.response.AuthenticationResponse;
 import com.certh.annotationtoolapp.payload.response.GeneralResponse;
@@ -51,7 +52,19 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(requestBody.getUsername(), requestBody.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = jwtUtils.generateJwtToken(authentication);
+
+            User user = userService.findUserByUsername(requestBody.getUsername());
+
+//            if(user.getRefreshToken() != null){
+//
+//                jwtUtils.validateJwtToken(user.getRefreshToken());
+//
+//
+//
+//            }
+
+
+            String jwt = jwtUtils.generateToken(authentication, "jwt");
 
             return ResponseEntity.ok(
                     new AuthenticationResponse(

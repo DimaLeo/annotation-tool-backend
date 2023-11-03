@@ -31,6 +31,43 @@ public class JwtUtils {
     @Value("${token.expiration.minutes}")
     private int jwtExpirationMinutes;
 
+    @Value("${jwt.refresh.secret.value}")
+    private String jwtRefreshSecret;
+
+    @Value("${token.refresh.expiration.minutes}")
+    private int jwtRefreshExpirationMinutes;
+
+    public String generateToken(Authentication authentication, String type) {
+        switch (type) {
+            case "jwt" -> {
+                return generateJwtToken(authentication);
+            }
+            case "refresh" -> {
+                return generateJwtRefreshToken(authentication);
+            }
+        }
+        return null;
+    }
+
+    private String generateJwtRefreshToken(Authentication authentication) {
+
+        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+
+        byte[] signingKey = jwtRefreshSecret.getBytes();
+
+        return Jwts.builder()
+                .setHeaderParam("typ", TOKEN_TYPE)
+                .signWith(Keys.hmacShaKeyFor(signingKey), SignatureAlgorithm.HS256)
+                .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(jwtRefreshExpirationMinutes).toInstant()))
+                .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
+                .setId(UUID.randomUUID().toString())
+                .setIssuer(TOKEN_ISSUER)
+                .setAudience(TOKEN_AUDIENCE)
+                .setSubject(userPrincipal.getUsername())
+                .compact();
+
+    }
+
     public String generateJwtToken(Authentication authentication) {
 
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
@@ -43,7 +80,7 @@ public class JwtUtils {
         return Jwts.builder()
                 .setHeaderParam("typ", TOKEN_TYPE)
                 .signWith(Keys.hmacShaKeyFor(signingKey), SignatureAlgorithm.HS256)
-                .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(jwtExpirationMinutes).toInstant()))
+                .setExpiration(Date.from(ZonedDateTime.now().plusSeconds(jwtExpirationMinutes).toInstant()))
                 .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
                 .setId(UUID.randomUUID().toString())
                 .setIssuer(TOKEN_ISSUER)
@@ -62,10 +99,11 @@ public class JwtUtils {
                 .parseClaimsJws(token).getBody().getSubject();
     }
 
-    public Optional<Jws<Claims>> validateJwtToken(String authToken) {
+    public Optional<Jws<Claims>> getJwtClaims(String authToken) {
         try {
 
             byte[] signingKey = jwtSecret.getBytes();
+
 
             Jws<Claims> jws = Jwts.parserBuilder()
                     .setSigningKey(signingKey)
