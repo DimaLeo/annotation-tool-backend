@@ -1,12 +1,12 @@
 package com.certh.annotationtoolapp.controller;
 
-import com.certh.annotationtoolapp.model.user.User;
 import com.certh.annotationtoolapp.payload.request.AuthRequest;
 import com.certh.annotationtoolapp.payload.request.ValidateTokenRequest;
 import com.certh.annotationtoolapp.payload.response.AuthenticationResponse;
 import com.certh.annotationtoolapp.payload.response.GeneralResponse;
 import com.certh.annotationtoolapp.security.jwt.JwtUtils;
 import com.certh.annotationtoolapp.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -42,18 +43,21 @@ public class AuthController {
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationResponse> authenticateUser(@RequestBody AuthRequest requestBody) {
 
+        log.info("User authentication initiated");
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(requestBody.getUsername(), requestBody.getPassword()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            User user = userService.findUserByUsername(requestBody.getUsername());
+            log.info("Authenticated");
 
-            System.out.println(user.getUsername() + " trying to log in");
-
+            log.info("Generating accessToken");
 
             String jwt = jwtUtils.generateToken(authentication, "jwt");
+
+            log.info("Successfully generated accessToken.");
 
             return ResponseEntity.ok(
                     new AuthenticationResponse(
@@ -64,6 +68,7 @@ public class AuthController {
         }
         catch (Exception e){
 //            AuthenticationResponse errorResponse = new AuthenticationResponse("", "", "Unauthorized", "Invalid Credentials");
+            log.info("Unauthorized");
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
@@ -72,17 +77,19 @@ public class AuthController {
     @PostMapping("/validateToken")
     public ResponseEntity<AuthenticationResponse> validateToken(@RequestBody ValidateTokenRequest requestBody){
 
+        log.info("Token validation initiated");
         AuthenticationResponse response;
 
 
+        log.info("Check if token is expired.");
         if(!jwtUtils.isJwtTokenExpired(requestBody.getAccessToken())){
+            log.info("Token still active");
             response = new AuthenticationResponse("", "Success", "The token is still valid");
         }else {
+            log.info("Token was expired");
             response = new AuthenticationResponse("","Expired", "The token is expired");
 
         }
-
-        System.out.println(response.getStatus());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
 
