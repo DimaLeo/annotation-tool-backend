@@ -35,9 +35,9 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
-                        .requestMatchers(HttpMethod.POST, "/posts/*").hasAnyAuthority(USER)
-                        .requestMatchers(HttpMethod.GET, "/posts/*").hasAnyAuthority(USER)
-                        .requestMatchers( "/user/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/posts/*").hasAuthority(USER)
+                        .requestMatchers(HttpMethod.GET, "/posts/*").hasAuthority(USER)
+                        .requestMatchers( "/auth/**").permitAll()
 //                        .requestMatchers("/", "/error", "/csrf", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

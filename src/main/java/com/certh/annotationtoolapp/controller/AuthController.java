@@ -2,27 +2,22 @@ package com.certh.annotationtoolapp.controller;
 
 import com.certh.annotationtoolapp.model.user.User;
 import com.certh.annotationtoolapp.payload.request.AuthRequest;
+import com.certh.annotationtoolapp.payload.request.ValidateTokenRequest;
 import com.certh.annotationtoolapp.payload.response.AuthenticationResponse;
 import com.certh.annotationtoolapp.payload.response.GeneralResponse;
 import com.certh.annotationtoolapp.security.jwt.JwtUtils;
-import com.certh.annotationtoolapp.security.services.UserDetailsImpl;
 import com.certh.annotationtoolapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationTrustResolver;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/auth")
 public class AuthController {
     private final UserService userService;
 
@@ -45,7 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticateUser(@RequestBody AuthRequest requestBody){
+    public ResponseEntity<AuthenticationResponse> authenticateUser(@RequestBody AuthRequest requestBody) {
 
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -55,13 +50,7 @@ public class AuthController {
 
             User user = userService.findUserByUsername(requestBody.getUsername());
 
-//            if(user.getRefreshToken() != null){
-//
-//                jwtUtils.validateJwtToken(user.getRefreshToken());
-//
-//
-//
-//            }
+            System.out.println(user.getUsername() + " trying to log in");
 
 
             String jwt = jwtUtils.generateToken(authentication, "jwt");
@@ -74,11 +63,28 @@ public class AuthController {
             );
         }
         catch (Exception e){
-            AuthenticationResponse response = new AuthenticationResponse("", "Unauthorized", "Invalid Credentials");
-            return new ResponseEntity<>(response, HttpStatus.OK);
+//            AuthenticationResponse errorResponse = new AuthenticationResponse("", "", "Unauthorized", "Invalid Credentials");
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
 
+    }
 
+    @PostMapping("/validateToken")
+    public ResponseEntity<AuthenticationResponse> validateToken(@RequestBody ValidateTokenRequest requestBody){
+
+        AuthenticationResponse response;
+
+
+        if(!jwtUtils.isJwtTokenExpired(requestBody.getAccessToken())){
+            response = new AuthenticationResponse("", "Success", "The token is still valid");
+        }else {
+            response = new AuthenticationResponse("","Expired", "The token is expired");
+
+        }
+
+        System.out.println(response.getStatus());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
 
     }
 }

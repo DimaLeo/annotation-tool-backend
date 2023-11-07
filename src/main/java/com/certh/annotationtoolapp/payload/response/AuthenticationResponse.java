@@ -2,8 +2,6 @@ package com.certh.annotationtoolapp.payload.response;
 
 import lombok.Data;
 
-import java.util.List;
-
 
 @Data
 public class AuthenticationResponse {

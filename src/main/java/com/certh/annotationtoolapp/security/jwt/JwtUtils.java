@@ -1,21 +1,17 @@
 package com.certh.annotationtoolapp.security.jwt;
 
-import java.security.Key;
 import java.time.ZonedDateTime;
 import java.util.*;
 
 import com.certh.annotationtoolapp.security.services.UserDetailsImpl;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
 @Slf4j
@@ -31,42 +27,13 @@ public class JwtUtils {
     @Value("${token.expiration.minutes}")
     private int jwtExpirationMinutes;
 
-    @Value("${jwt.refresh.secret.value}")
-    private String jwtRefreshSecret;
-
-    @Value("${token.refresh.expiration.minutes}")
-    private int jwtRefreshExpirationMinutes;
-
     public String generateToken(Authentication authentication, String type) {
-        switch (type) {
-            case "jwt" -> {
-                return generateJwtToken(authentication);
-            }
-            case "refresh" -> {
-                return generateJwtRefreshToken(authentication);
-            }
+        if (type.equals("jwt")) {
+            return generateJwtToken(authentication);
         }
         return null;
     }
 
-    private String generateJwtRefreshToken(Authentication authentication) {
-
-        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-
-        byte[] signingKey = jwtRefreshSecret.getBytes();
-
-        return Jwts.builder()
-                .setHeaderParam("typ", TOKEN_TYPE)
-                .signWith(Keys.hmacShaKeyFor(signingKey), SignatureAlgorithm.HS256)
-                .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(jwtRefreshExpirationMinutes).toInstant()))
-                .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
-                .setId(UUID.randomUUID().toString())
-                .setIssuer(TOKEN_ISSUER)
-                .setAudience(TOKEN_AUDIENCE)
-                .setSubject(userPrincipal.getUsername())
-                .compact();
-
-    }
 
     public String generateJwtToken(Authentication authentication) {
 
@@ -80,23 +47,14 @@ public class JwtUtils {
         return Jwts.builder()
                 .setHeaderParam("typ", TOKEN_TYPE)
                 .signWith(Keys.hmacShaKeyFor(signingKey), SignatureAlgorithm.HS256)
-                .setExpiration(Date.from(ZonedDateTime.now().plusSeconds(jwtExpirationMinutes).toInstant()))
+                .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(jwtExpirationMinutes).toInstant()))
                 .setIssuedAt(Date.from(ZonedDateTime.now().toInstant()))
                 .setId(UUID.randomUUID().toString())
                 .setIssuer(TOKEN_ISSUER)
                 .setAudience(TOKEN_AUDIENCE)
                 .setSubject(userPrincipal.getUsername())
-                .claim("roles", roles)
+                .claim("rol", roles)
                 .compact();
-    }
-
-    private Key key() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
-    }
-
-    public String getUserNameFromJwtToken(String token) {
-        return Jwts.parserBuilder().setSigningKey(key()).build()
-                .parseClaimsJws(token).getBody().getSubject();
     }
 
     public Optional<Jws<Claims>> getJwtClaims(String authToken) {
@@ -123,4 +81,21 @@ public class JwtUtils {
 
         return Optional.empty();
     }
+
+    public boolean isJwtTokenExpired(String accessToken) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(Keys.hmacShaKeyFor(jwtSecret.getBytes()))
+                    .build()
+                    .parseClaimsJws(accessToken)
+                    .getBody();
+
+            Date expiration = claims.getExpiration();
+            return expiration.before(new Date());
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+
 }
