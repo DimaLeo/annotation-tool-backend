@@ -45,28 +45,6 @@ public class UserService {
         }
     }
 
-    public GeneralResponse authenticateUser(String username, String password){
-        try{
-            log.info("Trying to authenticate user "+username);
-            User user = findUserByUsername(username);
-
-            if(encoder.matches(password, user.getPassword())){
-                log.info("success");
-                return new GeneralResponse("success","User successfully authenticated");
-            }
-            else {
-                log.info("failed");
-                return new GeneralResponse("unauthorized","Wrong password provided");
-
-            }
-
-        }
-        catch (Exception e){
-            log.error("Error: "+e.getMessage());
-            return new GeneralResponse("error","Authentication failed"+ e.getMessage());
-        }
-    }
-
     public User findUserByUsername(String username){
         Query query = new Query(Criteria.where("username").is(username));
         return mongoTemplate.findOne(query, User.class, "Users");
