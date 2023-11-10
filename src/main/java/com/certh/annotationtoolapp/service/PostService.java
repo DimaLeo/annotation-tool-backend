@@ -2,6 +2,7 @@ package com.certh.annotationtoolapp.service;
 
 import com.certh.annotationtoolapp.model.filters.Filters;
 import com.certh.annotationtoolapp.model.post.Post;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
@@ -15,9 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class PostService {
-    private static final Logger logger = LoggerFactory.getLogger(PostService.class);
     private final MongoTemplate mongoTemplate;
 
 
@@ -26,12 +27,12 @@ public class PostService {
     }
 
     public void updatePostField(String id, String fieldName, Object fieldValue, String collectionName) {
-        logger.info("Creating query to update post " + id);
+        log.info("Creating query to update post " + id);
         Query query = new Query(Criteria.where("id").is(id));
 
         Update update = new Update().set(fieldName, fieldValue);
 
-        logger.info("Updating post " + id + " with field: " + fieldName + " and value: " + fieldValue);
+        log.info("Updating post " + id + " with field: " + fieldName + " and value: " + fieldValue);
         mongoTemplate.updateFirst(query, update, Post.class, collectionName);
     }
 
@@ -44,10 +45,10 @@ public class PostService {
     }
 
     public List<Post> updatePostsWithNewField(List<Post> posts, String fieldName, String fieldValue, String collectionName) {
-        logger.info("preparing progress update criteria");
+        log.info("preparing progress update criteria");
         List<Post> resultList = new ArrayList<>();
 
-        logger.info("Updating data in db");
+        log.info("Updating data in db");
         for (Post post : posts) {
             Query query = new Query(Criteria.where("_id").is(post.get_id()));
 
@@ -65,7 +66,7 @@ public class PostService {
         Integer batchSize = 50;
 
         List<Post> posts = getPostsBatch(filters, "listView", batchSize);
-        logger.info("Retrieved post batch");
+        log.info("Retrieved post batch");
 
         return posts;
     }
@@ -76,8 +77,8 @@ public class PostService {
 
         List<Post> posts = getPostsBatch(filters, "annotation", batchSize);
 
-        logger.info("Retrieved post batch");
-        logger.info("Updating posts with annotation progress");
+        log.info("Retrieved post batch");
+        log.info("Updating posts with annotation progress");
 
         return updatePostsWithNewField(posts, "annotation_progress", "in_progress", filters.getCollectionName());
     }
@@ -92,7 +93,7 @@ public class PostService {
         }
 
         List<Post> posts;
-        logger.info("Retrieving data from db");
+        log.info("Retrieving data from db");
         posts = mongoTemplate.find(query, Post.class, filters.getCollectionName());
 
         return posts;
@@ -100,22 +101,20 @@ public class PostService {
 
     public Query generateQuery(Filters filters, String source, Integer batchSize) {
 
-        logger.info("!!!!!!!!!!!!!!!!!!!!"+filters.getPostStatus());
-
-        logger.info("generating query for " + source);
+        log.info("generating query for " + source);
 
         Sort sort = Sort.by(Sort.Direction.ASC, "timestamp");
         Query query = new Query().with(sort).limit(batchSize);
 
 
         ArrayList<Criteria> criteriaList = new ArrayList<>();
-        logger.info("Setting static criteria");
+        log.info("Setting static criteria");
         criteriaList.add(Criteria.where("is_quote").ne(true));
         criteriaList.add(Criteria.where("is_retweet").ne(true));
         criteriaList.add(Criteria.where("is_reply").ne(true));
 
         if (source.equals("annotation")) {
-            logger.info("setting static criteria for annotation view");
+            log.info("setting static criteria for annotation view");
             Criteria inProgressValueCriteria = Criteria.where("annotation_progress").is("aborted");
             Criteria inProgressNullCriteria = Criteria.where("annotation_progress").isNull();
             criteriaList.add(new Criteria().orOperator(inProgressValueCriteria, inProgressNullCriteria));
@@ -131,7 +130,7 @@ public class PostService {
 
         }
 
-        logger.info("Setting filter criteria");
+        log.info("Setting filter criteria");
         if (filters.getHasImage() != null && filters.getHasImage()) {
             criteriaList.add(Criteria.where("media_type").is("image"));
         }
@@ -142,7 +141,7 @@ public class PostService {
         Criteria andCriteria = new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
 
         query.addCriteria(andCriteria);
-        logger.info(query.toString());
+        log.info(query.toString());
 
         return query;
 
@@ -173,7 +172,7 @@ public class PostService {
 
     public void resetProgressField(String collectionName, List<String> postIdList, String status) {
 
-        logger.info("Executing resetProgressField");
+        log.info("Executing resetProgressField");
 
         Query query = new Query();
         ArrayList<Criteria> orCriteria = new ArrayList<>();
@@ -186,11 +185,11 @@ public class PostService {
 
         query.addCriteria(finalCriteria);
 
-        logger.info("Aborting annotation progress of post ids:");
+        log.info("Aborting annotation progress of post ids:");
         for (String id : postIdList) {
-            logger.info(id);
+            log.info(id);
         }
-        logger.info("due to "+ status);
+        log.info("due to "+ status);
         Update update = new Update().set("annotation_progress", "aborted");
 
 

@@ -1,9 +1,7 @@
-package com.certh.annotationtoolapp.requests;
+package com.certh.annotationtoolapp.payload.request;
 
 import lombok.Getter;
 import org.springframework.format.annotation.DateTimeFormat;
-
-import java.math.BigInteger;
 
 @Getter
 public class FetchPostsRequest {

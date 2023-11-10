@@ -1,7 +1,6 @@
-package com.certh.annotationtoolapp.requests;
+package com.certh.annotationtoolapp.payload.request;
 
 import lombok.Getter;
-import org.springframework.format.annotation.DateTimeFormat;
 
 @Getter
 public class AnnotatePostRequest {

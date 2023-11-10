@@ -1,21 +1,18 @@
 package com.certh.annotationtoolapp.model.user;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.beans.ConstructorProperties;
-
-@Getter
-@Setter
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Document(collection = "Users")
-public class User {
+public class User{
 
     public User(String username, String password) {
         this.username = username;
@@ -25,11 +22,12 @@ public class User {
     @Id
     private String id;
 
+    @NotBlank
     @Field("username")
     @Indexed(unique = true)
     private String username;
 
+    @NotBlank
     @Field("password")
     private String password;
-
 }
