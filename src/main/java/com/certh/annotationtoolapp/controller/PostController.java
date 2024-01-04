@@ -1,7 +1,7 @@
 package com.certh.annotationtoolapp.controller;
 
 import com.certh.annotationtoolapp.model.filters.Filters;
-import com.certh.annotationtoolapp.model.post.ExtractedLocationItem;
+import com.certh.annotationtoolapp.model.post.Feature;
 import com.certh.annotationtoolapp.model.post.Post;
 import com.certh.annotationtoolapp.payload.request.AnnotatePostRequest;
 import com.certh.annotationtoolapp.payload.request.ResetProgressRequest;
@@ -33,11 +33,11 @@ public class PostController {
 
         for(Post post: posts){
             List<String> locationNames = new ArrayList<>();
-            for(ExtractedLocationItem item: post.getExtractedLocations()){
-                locationNames.add(item.getPlacename());
+            for(Feature item: post.getFeatures()){
+                locationNames.add(item.getProperties().getPlacename());
             }
 
-            responseList.add(new FetchResponse(post.getId(), post.getText(), post.getPlatform(),post.getMediaUrl(), locationNames, post.getTimestamp()));
+            responseList.add(new FetchResponse(post.getId(), post.getText(), post.getPlatform(),post.getMedia_url(), locationNames, post.getTimestamp()));
         }
 
         return new ResponseEntity<>(responseList, HttpStatus.OK);
@@ -72,8 +72,8 @@ public class PostController {
 
         for(Post post: posts){
             List<String> locationNames = new ArrayList<>();
-            for(ExtractedLocationItem item: post.getExtractedLocations()){
-                locationNames.add(item.getPlacename());
+            for(Feature item: post.getFeatures()){
+                locationNames.add(item.getProperties().getPlacename());
             }
 
             String annotated_as;
@@ -85,7 +85,7 @@ public class PostController {
                 annotated_as = post.getAnnotatedAs()? "relevant" : "irrelevant";
             }
 
-            responseList.add(new FetchListViewResponse(post.getId(), post.getText(), post.getPlatform(),post.getMediaUrl(), locationNames, annotated_as, post.getTimestamp()));
+            responseList.add(new FetchListViewResponse(post.getId(), post.getText(), post.getPlatform(),post.getMedia_url(), locationNames, annotated_as, post.getTimestamp()));
         }
 
         return new ResponseEntity<>(responseList, HttpStatus.OK);

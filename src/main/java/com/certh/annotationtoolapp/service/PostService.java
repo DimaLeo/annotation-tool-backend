@@ -109,9 +109,8 @@ public class PostService {
 
         ArrayList<Criteria> criteriaList = new ArrayList<>();
         log.info("Setting static criteria");
-        criteriaList.add(Criteria.where("is_quote").ne(true));
-        criteriaList.add(Criteria.where("is_retweet").ne(true));
-        criteriaList.add(Criteria.where("is_reply").ne(true));
+        criteriaList.add(Criteria.where("tags.is_quote").ne(true));
+        criteriaList.add(Criteria.where("tags.is_retweet").ne(true));
 
         if (source.equals("annotation")) {
             log.info("setting static criteria for annotation view");
@@ -141,7 +140,8 @@ public class PostService {
         Criteria andCriteria = new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
 
         query.addCriteria(andCriteria);
-        log.info(query.toString());
+        log.info(query.toString());criteriaList.add(Criteria.where("tags.is_quote").ne(true));
+criteriaList.add(Criteria.where("tags.is_retweet").ne(true));
 
         return query;
 

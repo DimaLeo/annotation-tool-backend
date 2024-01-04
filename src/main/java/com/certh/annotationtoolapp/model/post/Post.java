@@ -1,85 +1,71 @@
 package com.certh.annotationtoolapp.model.post;
 
-import com.mongodb.lang.Nullable;
+import com.certh.annotationtoolapp.model.post.Feature;
+import com.certh.annotationtoolapp.model.post.SearchCriteria;
+import com.certh.annotationtoolapp.model.post.Tags;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.annotation.Nullable;
+import jakarta.validation.constraints.Null;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
+import java.util.List;
 
-@Document
-@AllArgsConstructor
-@Getter
-@Setter
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Document
 public class Post {
-
     @Id
-    @Getter
     private BigInteger _id;
-    @Field("id")
+    @Field(name = "id")
     private String id;
-    @Field("extracted_locations")
-    private ArrayList<ExtractedLocationItem> extractedLocations;
-    @Field("is_quote")
-    private boolean isQuote;
-    @Field("is_reply")
-    private boolean isReply;
-    @Field("is_retweet")
-    private boolean isRetweet;
-    @Field("language")
-    private String language;
-    @Field("matched_keywords")
-    private SearchCriteriaItem matchedKeywords;
-    @Field("media_type")
-    private String mediaType;
-    @Field("media_url")
-    private ArrayList<String> mediaUrl;
-    @Field("mentioned_users")
-    private ArrayList<UserItem> mentionedUsers;
-    @Field("platform")
+    @Field(name = "platform")
     private String platform;
-    @Field("possibly_sensitive")
-    private Boolean possiblySensitive;
-    @Field("quoted_user_id")
-    private ArrayList<UserItem> quotedUserId;
-    @Field("referenced_id")
-    private ArrayList<String> referencedId;
-    @Field("replied_user_id")
-    private ArrayList<UserItem> repliedUserId;
-    @Field("retweeted_user_id")
-    private ArrayList<UserItem> retweetedUserId;
-    @Field("text")
+    @Field(name = "language")
+    private String language;
+    @Field(name = "text")
     private String text;
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @Field("timestamp")
+    @Field(name = "media_url")
+    private List<String> media_url;
+    @Field(name = "media_type")
+    private String media_type;
+    @Field(name = "timestamp")
     private String timestamp;
-    @Field("url")
-    private String url;
-    @Field("userid")
-    private String userid;
-    @Field("username")
-    private String username;
-    @Field("username_id")
-    private String usernameId;
-    @Field("visual_concepts")
-    private ArrayList<String> visualConcepts;
-    @Field("sentiment")
+    @Field(name = "visual_concepts")
+    private List<String> visual_concepts;
+    @Field(name = "type")
+    private String type;
+    @Field(name = "features")
+    private List<Feature> features;
+    @Field(name = "search_criteria")
+    private SearchCriteria searchCriteria;
+    @Field(name = "tags")
+    private Tags tags;
     @Nullable
-    private String sentiment;
-    @Field("annotated_as")
-    @Nullable
+    @JsonProperty("annotated_as")
+    @Field(name = "annotated_as")
     private Boolean annotatedAs;
-    @Field("relevance_score")
-    @Nullable
-    private Double relevanceScore;
-    @Field("annotation_progress")
-    @Nullable
-    private String annotationProgress;
+
+
+    public Post(String id, String platform, String text, List<String> media_url, String media_type, String timestamp, List<String> visual_concepts, String type, List<Feature> features,  String language, SearchCriteria searchCriteria, Tags tags) {
+        this.id = id;
+        this.platform = platform;
+        this.text = text;
+        this.media_url = media_url;
+        this.media_type = media_type;
+        this.timestamp = timestamp;
+        this.visual_concepts = visual_concepts;
+        this.type = type;
+        this.features = features;
+        this.language = language;
+        this.searchCriteria = searchCriteria;
+        this.tags = tags;
+    }
 }
