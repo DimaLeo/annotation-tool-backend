@@ -4,7 +4,7 @@ import com.certh.annotationtoolapp.model.filters.Filters;
 import com.certh.annotationtoolapp.model.post.Feature;
 import com.certh.annotationtoolapp.model.post.Post;
 import com.certh.annotationtoolapp.payload.request.AnnotatePostRequest;
-import com.certh.annotationtoolapp.payload.request.ResetProgressRequest;
+import com.certh.annotationtoolapp.payload.request.PostsIdListPayload;
 import com.certh.annotationtoolapp.payload.response.GeneralResponse;
 import com.certh.annotationtoolapp.payload.response.FetchResponse;
 import com.certh.annotationtoolapp.payload.response.FetchListViewResponse;
@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/posts")
@@ -99,7 +100,7 @@ public class PostController {
     }
 
     @PostMapping("/abort-progress")
-    public ResponseEntity<GeneralResponse> resetInProgressPosts(@RequestBody ResetProgressRequest requestBody){
+    public ResponseEntity<GeneralResponse> resetInProgressPosts(@RequestBody PostsIdListPayload requestBody){
         try{
             postService.resetProgressField(requestBody.getCollectionName(), requestBody.getPostIdList(), requestBody.getReason());
             return new ResponseEntity<>(new GeneralResponse("Success", "Successfully reverted posts"), HttpStatus.OK);
@@ -107,6 +108,36 @@ public class PostController {
         catch (Exception ex){
             System.out.println(ex.getMessage());
             return new ResponseEntity<>(new GeneralResponse("Error", ex.getMessage()), HttpStatus.NOT_MODIFIED);
+        }
+
+    }
+
+    @PostMapping("/get-cached-posts")
+    public ResponseEntity<List<FetchResponse>> getCachedPosts(@RequestBody PostsIdListPayload requestBody){
+        try{
+            List<Post> posts = postService.getCachedPosts(requestBody.getCollectionName(), requestBody.getPostIdList());
+            List<FetchResponse> responseList = posts.stream()
+                    .map(post -> {
+                        List<String> locationNames = post.getFeatures().stream()
+                                .map(feature -> feature.getProperties().getPlacename())
+                                .collect(Collectors.toList());
+
+                        return new FetchResponse(
+                                post.getId(),
+                                post.getText(),
+                                post.getPlatform(),
+                                post.getMedia_url(),
+                                locationNames,
+                                post.getTimestamp()
+                        );
+                    })
+                    .toList();
+
+            return new ResponseEntity<>(responseList, HttpStatus.OK);
+        }
+        catch (Exception ex){
+            System.out.println(ex.getMessage());
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }

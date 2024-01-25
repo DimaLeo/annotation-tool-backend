@@ -5,7 +5,7 @@ import lombok.Getter;
 import java.util.List;
 
 @Getter
-public class ResetProgressRequest {
+public class PostsIdListPayload {
 
     private String collectionName;
     private List<String> postIdList;

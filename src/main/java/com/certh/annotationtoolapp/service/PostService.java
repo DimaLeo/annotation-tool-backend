@@ -195,4 +195,19 @@ criteriaList.add(Criteria.where("tags.is_retweet").ne(true));
 
         mongoTemplate.updateMulti(query, update, Post.class, collectionName);
     }
+
+    public List<Post> getCachedPosts(String collectionName, List<String> postIdList){
+        Query query = new Query();
+        ArrayList<Criteria> andCriteria = new ArrayList<>();
+
+        andCriteria.add(Criteria.where("id").in(postIdList));
+        andCriteria.add(Criteria.where("annotation_progress").is("in_progress"));
+
+        Criteria finalCriteria = new Criteria().andOperator(andCriteria.toArray(new Criteria[0]));
+
+        query.addCriteria(finalCriteria);
+
+        return mongoTemplate.find(query, Post.class, collectionName);
+
+    }
 }
