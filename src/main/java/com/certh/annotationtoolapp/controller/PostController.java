@@ -35,7 +35,8 @@ public class PostController {
         for(Post post: posts){
             List<String> locationNames = new ArrayList<>();
             for(Feature item: post.getFeatures()){
-                locationNames.add(item.getProperties().getPlacename());
+                String[] placeSections = item.getProperties().getPlacename().split(",");
+                locationNames.add(placeSections[0].trim() + ", " + placeSections[placeSections.length - 1].trim());
             }
 
             responseList.add(new FetchResponse(post.getId(), post.getText(), post.getPlatform(),post.getMedia_url(), locationNames, post.getTimestamp()));
