@@ -73,9 +73,12 @@ public class PostController {
         List<FetchListViewResponse> responseList = new ArrayList<>();
 
         for(Post post: posts){
+
             List<String> locationNames = new ArrayList<>();
+
             for(Feature item: post.getFeatures()){
-                locationNames.add(item.getProperties().getPlacename());
+                String[] placeSections = item.getProperties().getPlacename().split(",");
+                locationNames.add(placeSections[0].trim() + ", " + placeSections[placeSections.length - 1].trim());
             }
 
             String annotated_as;
