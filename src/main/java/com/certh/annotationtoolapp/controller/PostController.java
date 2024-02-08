@@ -35,8 +35,13 @@ public class PostController {
         for(Post post: posts){
             List<String> locationNames = new ArrayList<>();
             for(Feature item: post.getFeatures()){
-                String[] placeSections = item.getProperties().getPlacename().split(",");
-                locationNames.add(placeSections[0].trim() + ", " + placeSections[placeSections.length - 1].trim());
+                String[] placeSections =  item.getProperties().getPlacename().split(",");
+
+                if (placeSections.length > 1) {
+                    locationNames.add(placeSections[0].trim() + ", " + placeSections[placeSections.length - 1].trim());
+                } else {
+                    locationNames.add(placeSections[0].trim());
+                }
             }
 
             responseList.add(new FetchResponse(post.getId(), post.getText(), post.getPlatform(),post.getMedia_url(), locationNames, post.getTimestamp()));
@@ -72,13 +77,18 @@ public class PostController {
         List<Post> posts = postService.getListViewBatch(filters);
         List<FetchListViewResponse> responseList = new ArrayList<>();
 
+
+
         for(Post post: posts){
-
             List<String> locationNames = new ArrayList<>();
-
             for(Feature item: post.getFeatures()){
-                String[] placeSections = item.getProperties().getPlacename().split(",");
-                locationNames.add(placeSections[0].trim() + ", " + placeSections[placeSections.length - 1].trim());
+                String[] placeSections =  item.getProperties().getPlacename().split(",");
+
+                if (placeSections.length > 1) {
+                    locationNames.add(placeSections[0].trim() + ", " + placeSections[placeSections.length - 1].trim());
+                } else {
+                    locationNames.add(placeSections[0].trim());
+                }
             }
 
             String annotated_as;
