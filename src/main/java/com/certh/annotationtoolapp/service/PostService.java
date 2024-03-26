@@ -2,6 +2,7 @@ package com.certh.annotationtoolapp.service;
 
 import com.certh.annotationtoolapp.model.filters.Filters;
 import com.certh.annotationtoolapp.model.post.Post;
+import com.certh.annotationtoolapp.payload.response.AnnotationCountsResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static java.util.List.copyOf;
 
 @Slf4j
 @Service
@@ -208,6 +211,53 @@ criteriaList.add(Criteria.where("tags.is_retweet").ne(true));
         query.addCriteria(finalCriteria);
 
         return mongoTemplate.find(query, Post.class, collectionName);
+
+    }
+
+    public AnnotationCountsResponse getAnnotationCounts(Filters filters){
+
+        ArrayList<Criteria> criteriaList = new ArrayList<>();
+        log.info("Setting static criteria");
+        criteriaList.add(Criteria.where("tags.is_quote").ne(true));
+        criteriaList.add(Criteria.where("tags.is_retweet").ne(true));
+
+        if (filters.getHasImage() != null && filters.getHasImage()) {
+            criteriaList.add(Criteria.where("media_type").is("image"));
+        }
+
+        Query all_posts_number_query = new Query();
+        Query annotated_posts_number_query = new Query();
+        Query skipped_posts_number_query = new Query();
+
+        criteriaList.add(Criteria.where("language").is(filters.getLanguage()));
+        criteriaList.add(Criteria.where("timestamp").gte(filters.getFromDate()));
+        criteriaList.add(Criteria.where("timestamp").lte(filters.getToDate()));
+
+        List<Criteria> completedCriteria = new ArrayList<>(copyOf(criteriaList));
+        completedCriteria.add(Criteria.where("annotation_progress").is("completed"));
+
+        List<Criteria> skippedCriteria = new ArrayList<>(copyOf(criteriaList));
+        skippedCriteria.add(Criteria.where("annotation_progress").is("skipped"));
+
+        Criteria allAndCriteria = new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
+        Criteria completedAndCriteria = new Criteria().andOperator(completedCriteria.toArray(new Criteria[0]));
+        Criteria skippedAndCriteria = new Criteria().andOperator(skippedCriteria.toArray(new Criteria[0]));
+
+        all_posts_number_query.addCriteria(allAndCriteria);
+        annotated_posts_number_query.addCriteria(completedAndCriteria);
+        skipped_posts_number_query.addCriteria(skippedAndCriteria);
+
+
+        System.out.println("Queries:");
+        System.out.println(all_posts_number_query.toString());
+        System.out.println(annotated_posts_number_query.toString());
+        System.out.println(skipped_posts_number_query.toString());
+
+        Long all_posts_number = mongoTemplate.count(all_posts_number_query, Post.class, filters.getCollectionName());
+        Long annotated_posts_number = mongoTemplate.count(annotated_posts_number_query, Post.class, filters.getCollectionName());
+        Long skipped_posts_number = mongoTemplate.count(skipped_posts_number_query, Post.class, filters.getCollectionName());
+
+        return new AnnotationCountsResponse(all_posts_number, annotated_posts_number, skipped_posts_number);
 
     }
 }

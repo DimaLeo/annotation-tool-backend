@@ -5,6 +5,7 @@ import com.certh.annotationtoolapp.model.post.Feature;
 import com.certh.annotationtoolapp.model.post.Post;
 import com.certh.annotationtoolapp.payload.request.AnnotatePostRequest;
 import com.certh.annotationtoolapp.payload.request.PostsIdListPayload;
+import com.certh.annotationtoolapp.payload.response.AnnotationCountsResponse;
 import com.certh.annotationtoolapp.payload.response.GeneralResponse;
 import com.certh.annotationtoolapp.payload.response.FetchResponse;
 import com.certh.annotationtoolapp.payload.response.FetchListViewResponse;
@@ -154,5 +155,12 @@ public class PostController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
+    }
+
+    @PostMapping("/annotation-counts")
+    public ResponseEntity<AnnotationCountsResponse> getAnnotationCounts(@RequestBody Filters filters){
+        AnnotationCountsResponse countsResponse = postService.getAnnotationCounts(filters);
+        System.out.println(countsResponse.toString());
+        return new ResponseEntity<>(countsResponse, HttpStatus.OK);
     }
 }
